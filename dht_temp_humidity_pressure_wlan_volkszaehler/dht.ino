@@ -13,7 +13,7 @@
  * 
  * As far as any code here that I have contributed is concerned, an MIT license applies.
  *
- * More details on this project: https://mattbirgit.de/diy-temp-hum.html
+ * More details on this project: https://www.mattbirgit.de/diy-temp-hum.html
  *
  */
 
