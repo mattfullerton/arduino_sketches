@@ -53,12 +53,12 @@ void loop() {
     }
     digitalWrite(LED_WLAN, HIGH);
     Serial.println("Taking reading...");
-    int reading = getTPHTemp();  
+    float reading = getTPHTemp();  
     Serial.println(String(reading) + "°C");
-    if (sendVolkszaehler("VZ SERVER HERE, e.g. 192.168.0.111", "CHANNEL UUID FOR TEMPERATURE HERE", reading)) debug("Sent Temp to VZ");
+    if (sendVolkszaehler("VZ SERVER HERE, e.g. 192.168.0.111", "VZ PORT HERE, e.g. 80", "CHANNEL UUID FOR TEMPERATURE HERE", reading)) debug("Sent Temp to VZ");
     reading = getTPHHum();  
     Serial.println(String(reading) + "%");
-    if (sendVolkszaehler("VZ SERVER HERE, e.g. 192.168.0.111", "CHANNEL UUID FOR HUMIDITY HERE", reading)) debug("Sent Humidity to VZ, will now wait about 4min");
+    if (sendVolkszaehler("VZ SERVER HERE, e.g. 192.168.0.111", "VZ PORT HERE, e.g. 80", "CHANNEL UUID FOR HUMIDITY HERE", reading)) debug("Sent Humidity to VZ, will now wait about 4min");
     debug("Disconnecting WLAN");
     if (disconnectStation()) {
         digitalWrite(LED_WLAN, LOW);
@@ -84,13 +84,12 @@ int getTPHHum(){
 
 //------------ VZ functions, derived from ThingsSpeak Functions from the Conrad code ---------
 
-boolean sendVolkszaehler(String host, String channel, int value)
+boolean sendVolkszaehler(String host, String port, String channel, float value)
 {
   boolean success = true;
   String msg = "{\"value\" : " + String(value) + "}";
-  success &= sendCom("AT+CIPSTART=\"TCP\",\"" + host + "\",80", "OK");
-
-  String getRequest = createVZGet(host, "/middleware/data/" + channel + ".json?operation=add&value=" + String(value));
+  success &= sendCom("AT+CIPSTART=\"TCP\",\"" + host + "\"," + port, "OK");
+  String getRequest = createVZGet(host, port, "/data/" + channel + ".json?operation=add&value=" + String(value));
 
   if (sendCom("AT+CIPSEND=" + String(getRequest.length()), ">"))
   {
@@ -104,13 +103,14 @@ boolean sendVolkszaehler(String host, String channel, int value)
     success = false;
   }
   return success;
-}  
+} 
 
-String createVZGet(String host, String path)
+String createVZGet(String host, String port, String path)
 {
   //Don't close the connection because ESP routine does it for us from our side
-  String xBuffer = "GET *PATH* HTTP/1.1\r\nHost: *HOST*\r\n\r\n";
+  String xBuffer = "GET *PATH* HTTP/1.1\r\nHost: *HOST*:*PORT*\r\n\r\n";
   xBuffer.replace("*HOST*", host);
+  xBuffer.replace("*PORT*", port);
   xBuffer.replace("*PATH*", path);
 
   return xBuffer;
